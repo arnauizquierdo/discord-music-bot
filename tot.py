@@ -54,11 +54,12 @@ async def play_music(ctx, url):
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url, download=False) # Extraiem informació (format diccionari) només de la URL i no ho descarreguem
         audio_url = info['url']
-
-    ffmpeg_options = {'options': '-vn'} # Amb '-vn' no processem el video, només l'audio
+        
+    #-reconnect_delay_max 5 -reconnect_streamed 1 --> AMB L'OPCIÓ QUE HEM AFEGIT ARA S'HA ACONSEGUIT QUE LES CANÇONS NO ES PARIN A LA MEITAT
+    ffmpeg_options = {'options': '-vn', 'before_options': '-reconnect 1'} # Amb '-vn' no processem el video, només l'audio
     # Amb això 'discord.FFmpegPCMAudio(audio_url, **ffmpeg_options)' convertim un arxiu d'audio (en aquest cas la direcció es una URL que apunta a youtube) a algo que es pugui reproduir a discord.
     # ho fem amb les especificacions de que no s'ha de descarregar
-    voice_client.play(discord.FFmpegPCMAudio(audio_url, **ffmpeg_options), after=lambda e: asyncio.run_coroutine_threadsafe(play_next(ctx), bot.loop))
+    voice_client.play(discord.FFmpegOpusAudio(audio_url, **ffmpeg_options), after=lambda e: asyncio.run_coroutine_threadsafe(play_next(ctx), bot.loop))
 
     """
     POSSIBLE RESPOSTA DE PERQUE LA CANÇO ES PARA PER LA METITAT:
@@ -92,7 +93,7 @@ async def join(ctx):
 
 @bot.command()
 async def play(ctx, url: str):
-    """Comando para reproducir música"""
+    #"""[link]: escoltar musica"""
     add_to_queue(ctx.guild.id, url)
     voice_client = discord.utils.get(bot.voice_clients, guild=ctx.guild)
     
@@ -104,7 +105,7 @@ async def play(ctx, url: str):
 
 @bot.command()
 async def stop(ctx):
-    """Detiene la reproducción y desconecta el bot"""
+    #"""Detiene la reproducción y desconecta el bot"""
     voice_client = discord.utils.get(bot.voice_clients, guild=ctx.guild)
     if voice_client:
         await voice_client.disconnect()
@@ -114,7 +115,7 @@ async def stop(ctx):
 
 @bot.command()
 async def skip(ctx):
-    """Salta la canción actual y reproduce la siguiente en la cola"""
+    #"""Salta la canción actual y reproduce la siguiente en la cola"""
     voice_client = discord.utils.get(bot.voice_clients, guild=ctx.guild)
     if voice_client and voice_client.is_playing():
         voice_client.stop()
@@ -122,6 +123,13 @@ async def skip(ctx):
         await ctx.send("⏭️ Saltando a la siguiente canción")
     else:
         await ctx.send("❌ No hay canciones en reproducción")
+
+bot.remove_command("help")
+
+@bot.command()
+async def help(ctx):
+    await ctx.send("```>play [link]: Escoltar musica.\n\n>stop:  Surt del canal i elimina la cua.\n\n>skip:  Avança una caçó de la cua.\n\n>queue: Mostra els links de la cua.\n\n>join:  Entra al teu canal de veu i s'elimina la cua.```")
+
 
 @bot.command()
 async def queue(ctx):
