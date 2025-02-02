@@ -66,11 +66,6 @@ async def play_music(ctx, url):
     # ho fem amb les especificacions de que no s'ha de descarregar
     voice_client.play(discord.FFmpegOpusAudio(audio_url, **ffmpeg_options), after=lambda e: asyncio.run_coroutine_threadsafe(play_next(ctx), bot.loop))
 
-    """
-    POSSIBLE RESPOSTA DE PERQUE LA CANÇO ES PARA PER LA METITAT:
-    https://stackoverflow.com/questions/68045122/discord-py-ffmpegpcmaudio-stops-playing-sound-in-the-middle-of-sound-file
-    """
-
     await ctx.send(f"Reproduint: {info['title']}")
 
 # Comanda perque el bot entri al canal de veu de l'autor del missatge (pot passar que s'hagi quedat en un altre canal de veu reproduint una musica i tu el vulguis en l'actual)
@@ -98,6 +93,11 @@ async def join(ctx):
 
 @bot.command()
 async def play(ctx, url: str):
+
+    if not ctx.author.voice: # Si l'autor de la crida no esta a cap canal...
+        await ctx.send("```Error! Primer has d'estar en un canal de veu.```")
+        return 0
+
     add_to_queue(ctx.guild.id, url)
     voice_client = discord.utils.get(bot.voice_clients, guild=ctx.guild)
     
@@ -105,7 +105,7 @@ async def play(ctx, url: str):
     if not voice_client or not voice_client.is_playing(): 
         await play_next(ctx)
     else:
-        await ctx.send("🎵 Canción añadida a la cola")
+        await ctx.send("```Cançó afegida a la cua.```")
 
 @bot.command()
 async def stop(ctx):
@@ -113,9 +113,9 @@ async def stop(ctx):
     voice_client = discord.utils.get(bot.voice_clients, guild=ctx.guild)
     if voice_client:
         await voice_client.disconnect()
-        await ctx.send("🛑 Desconectado del canal de voz")
+        await ctx.send("```Sortint del canal de veu " + str(voice_client.channel) + "```")
     else:
-        await ctx.send("❌ No estoy en un canal de voz")
+        await ctx.send("```No estic a cap canal de veu```")
 
 @bot.command()
 async def skip(ctx):
@@ -124,15 +124,15 @@ async def skip(ctx):
     if voice_client and voice_client.is_playing():
         voice_client.stop()
         await play_next(ctx)
-        await ctx.send("⏭️ Saltando a la siguiente canción")
+        await ctx.send("Saltant de cançó.")
     else:
-        await ctx.send("❌ No hay canciones en reproducción")
+        await ctx.send("No hi han més cançons a la cua.")
 
 bot.remove_command("help")
 
 @bot.command()
 async def help(ctx):
-    await ctx.send("```>play [link]: Escoltar musica.\n\n>stop:  Surt del canal i elimina la cua.\n\n>skip:  Avança una caçó de la cua.\n\n>queue: Mostra els links de la cua.\n\n>join:  Entra al teu canal de veu i s'elimina la cua.```")
+    await ctx.send("```\n=====================================\n Bot per reproduïr musica de Youtube\n=====================================\n\nLlistat de comandes:\n\n>play [link]: Escoltar musica (de Youtube).\n\n>stop:  Surt del canal i elimina la cua existent.\n\n>skip:  Reprodueix la següent cançó de la cua.\n\n>queue: Mostra els links de la cua.\n\n>join:  Entra al teu canal de veu i elimina la cua.```")
 
 
 @bot.command()
@@ -142,20 +142,11 @@ async def queue(ctx):
     if len(actual_queue) == 0:
         await ctx.send("Llista buida")
     else:
-        await ctx.send(actual_queue)
-
-    """
-    if len(actual_queue) == 0:
-        ctx.send("Cua buida.")
-    else:
-        show_queue = []
-        for link in actual_queue:
-            ydl_opts = {'format': 'bestaudio'}
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(link, download=False)
-            show_queue.append(info['title'])
-        await ctx.send(show_queue)
-    """
+        llista = "```"
+        for i in range(len(actual_queue)):
+            llista = llista + str(i+1) + ". " + actual_queue[i] + "\n"
+        llista = llista + "```Cua de cançons:\n\n"
+        await ctx.send(llista)
 
 try:
     bot.run(TOKEN)
