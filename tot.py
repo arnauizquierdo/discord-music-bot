@@ -60,7 +60,7 @@ async def play_music(ctx, url):
         play_next(ctx)
         return 0
 
-    #-reconnect_delay_max 5 -reconnect_streamed 1 --> AMB L'OPCIÓ QUE HEM AFEGIT ARA S'HA ACONSEGUIT QUE LES CANÇONS NO ES PARIN A LA MEITAT
+    #-reconnect_delay_max 5 -reconnect_streamed 1 --> AMB L'OPCIÓ 'before_options': '-reconnect 1' S'HA ACONSEGUIT QUE LES CANÇONS NO ES PARIN A LA MEITAT
     ffmpeg_options = {'options': '-vn', 'before_options': '-reconnect 1'} # Amb '-vn' no processem el video, només l'audio
     # Amb això 'discord.FFmpegPCMAudio(audio_url, **ffmpeg_options)' convertim un arxiu d'audio (en aquest cas la direcció es una URL que apunta a youtube) a algo que es pugui reproduir a discord.
     # ho fem amb les especificacions de que no s'ha de descarregar
@@ -80,16 +80,16 @@ async def join(ctx):
             if voice_client.channel != channel: # Si està al mateix canal que l'autor del missatge ...
                 if voice_client.is_playing(): # Si esta cantant alguna canço ...
                     get_queue(ctx.guild.id).clear()
-                    await ctx.send("Movent bot i eliminant cua...")
+                    await ctx.send("```Movent bot i eliminant cua...```")
                 await voice_client.disconnect()
                 await channel.connect()
             else:
-                await ctx.send("Ja estic al canal " + str(voice_client.channel) + ".")
+                await ctx.send("```Ja estic al canal " + str(voice_client.channel) + ".```")
         else:
             await channel.connect()
         
     else:
-        await ctx.send("Has d'estar en un canal de veu")
+        await ctx.send("```Has d'estar en un canal de veu```")
 
 @bot.command()
 async def play(ctx, url: str):
@@ -109,7 +109,7 @@ async def play(ctx, url: str):
 
 @bot.command()
 async def stop(ctx):
-    #"""Detiene la reproducción y desconecta el bot"""
+    
     voice_client = discord.utils.get(bot.voice_clients, guild=ctx.guild)
     if voice_client:
         await voice_client.disconnect()
@@ -123,10 +123,10 @@ async def skip(ctx):
     voice_client = discord.utils.get(bot.voice_clients, guild=ctx.guild)
     if voice_client and voice_client.is_playing():
         voice_client.stop()
+        await ctx.send("```Saltant de cançó.```")
         await play_next(ctx)
-        await ctx.send("Saltant de cançó.")
     else:
-        await ctx.send("No hi han més cançons a la cua.")
+        await ctx.send("```No hi han més cançons a la cua.```")
 
 bot.remove_command("help")
 
@@ -140,12 +140,12 @@ async def queue(ctx):
 
     actual_queue = get_queue(ctx.guild.id)
     if len(actual_queue) == 0:
-        await ctx.send("Llista buida")
+        await ctx.send("```Llista buida```")
     else:
-        llista = "```"
+        llista = "```Cua de cançons:\n\n"
         for i in range(len(actual_queue)):
             llista = llista + str(i+1) + ". " + actual_queue[i] + "\n"
-        llista = llista + "```Cua de cançons:\n\n"
+        llista = llista + "```"
         await ctx.send(llista)
 
 try:
