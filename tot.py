@@ -54,7 +54,12 @@ async def play_music(ctx, url):
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url, download=False) # Extraiem informació (format diccionari) només de la URL i no ho descarreguem
         audio_url = info['url']
-        
+
+    if info.get('extractor') != 'youtube':
+        await ctx.send("```Només es poden reproduir cançons de Youtube.```")
+        play_next(ctx)
+        return 0
+
     #-reconnect_delay_max 5 -reconnect_streamed 1 --> AMB L'OPCIÓ QUE HEM AFEGIT ARA S'HA ACONSEGUIT QUE LES CANÇONS NO ES PARIN A LA MEITAT
     ffmpeg_options = {'options': '-vn', 'before_options': '-reconnect 1'} # Amb '-vn' no processem el video, només l'audio
     # Amb això 'discord.FFmpegPCMAudio(audio_url, **ffmpeg_options)' convertim un arxiu d'audio (en aquest cas la direcció es una URL que apunta a youtube) a algo que es pugui reproduir a discord.
@@ -93,7 +98,6 @@ async def join(ctx):
 
 @bot.command()
 async def play(ctx, url: str):
-    #"""[link]: escoltar musica"""
     add_to_queue(ctx.guild.id, url)
     voice_client = discord.utils.get(bot.voice_clients, guild=ctx.guild)
     
