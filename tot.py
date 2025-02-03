@@ -56,8 +56,9 @@ async def play_music(ctx, url):
         audio_url = info['url']
 
     if info.get('extractor') != 'youtube':
-        await ctx.send("```Només es poden reproduir cançons de Youtube.```")
-        play_next(ctx)
+        await ctx.send(f"```No pots reproduir '{info['title']}'! Només es poden reproduir cançons de Youtube.```")
+        voice_client.pause()
+        await play_next(ctx)
         return 0
 
     #-reconnect_delay_max 5 -reconnect_streamed 1 --> AMB L'OPCIÓ 'before_options': '-reconnect 1' S'HA ACONSEGUIT QUE LES CANÇONS NO ES PARIN A LA MEITAT
