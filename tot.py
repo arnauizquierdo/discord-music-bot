@@ -64,9 +64,9 @@ async def play_music(ctx, url):
     ffmpeg_options = {'options': '-vn', 'before_options': '-reconnect 1'} # Amb '-vn' no processem el video, només l'audio
     # Amb això 'discord.FFmpegPCMAudio(audio_url, **ffmpeg_options)' convertim un arxiu d'audio (en aquest cas la direcció es una URL que apunta a youtube) a algo que es pugui reproduir a discord.
     # ho fem amb les especificacions de que no s'ha de descarregar
-    voice_client.play(discord.FFmpegOpusAudio(audio_url, **ffmpeg_options), after=lambda e: asyncio.run_coroutine_threadsafe(play_next(ctx), bot.loop))
+    voice_client.play(discord.FFmpegOpusAudio(audio_url, **ffmpeg_options), after=lambda e: asyncio.run_coroutine_threadsafe(play_next(ctx), bot.loop) if not voice_client.is_paused() else  None)
 
-    await ctx.send(f"Reproduint: {info['title']}")
+    await ctx.send(f"```Reproduint: {info['title']}```")
 
 # Comanda perque el bot entri al canal de veu de l'autor del missatge (pot passar que s'hagi quedat en un altre canal de veu reproduint una musica i tu el vulguis en l'actual)
 @bot.command()
@@ -112,6 +112,7 @@ async def stop(ctx):
     
     voice_client = discord.utils.get(bot.voice_clients, guild=ctx.guild)
     if voice_client:
+        get_queue(ctx.guild.id).clear()
         await voice_client.disconnect()
         await ctx.send("```Sortint del canal de veu " + str(voice_client.channel) + "```")
     else:
@@ -120,13 +121,16 @@ async def stop(ctx):
 @bot.command()
 async def skip(ctx):
     #"""Salta la canción actual y reproduce la siguiente en la cola"""
-    voice_client = discord.utils.get(bot.voice_clients, guild=ctx.guild)
-    if voice_client and voice_client.is_playing():
-        voice_client.stop()
-        await ctx.send("```Saltant de cançó.```")
-        await play_next(ctx)
-    else:
+    if len(get_queue(ctx.guild.id)) == 0:
         await ctx.send("```No hi han més cançons a la cua.```")
+        return 0
+    
+    voice_client = discord.utils.get(bot.voice_clients, guild=ctx.guild)
+
+    if voice_client and voice_client.is_playing():
+        voice_client.pause()
+        await ctx.send("```Saltant de cançó.```")
+        await play_next(ctx)       
 
 bot.remove_command("help")
 
