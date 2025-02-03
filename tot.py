@@ -39,6 +39,9 @@ async def play_next(ctx):
     if queue:
         url = queue.pop(0)
         await play_music(ctx, url)
+    else:
+        await stop(ctx)
+
 
 
 async def play_music(ctx, url):
@@ -49,6 +52,11 @@ async def play_music(ctx, url):
     if not voice_client: 
         channel = ctx.author.voice.channel
         voice_client = await channel.connect()
+
+    if '/playlist?list=' in url:
+        await ctx.send("```No pots reproduir llistes de reproducció```")
+        await play_next(ctx)
+        return 0
 
     ydl_opts = {'format': 'bestaudio', 'noplaylist': True}
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
