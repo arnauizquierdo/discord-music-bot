@@ -58,7 +58,7 @@ async def play_music(ctx, url):
         await play_next(ctx)
         return 0
 
-    ydl_opts = {'format': 'bestaudio', 'noplaylist': True}
+    ydl_opts = {'format': 'bestaudio', 'noplaylist': True, 'cookiefile': config["COOKIES_YOUTUBE"]}
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url, download=False) # Extraiem informació (format diccionari) només de la URL i no ho descarreguem
         audio_url = info['url']
