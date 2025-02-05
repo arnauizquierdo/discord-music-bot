@@ -60,8 +60,12 @@ async def play_music(ctx, url):
 
     ydl_opts = {'format': 'bestaudio', 'noplaylist': True, 'cookiefile': config["COOKIES_YOUTUBE"]}
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        info = ydl.extract_info(url, download=False) # Extraiem informació (format diccionari) només de la URL i no ho descarreguem
-        audio_url = info['url']
+        try:
+            info = ydl.extract_info(url, download=False) # Extraiem informació (format diccionari) només de la URL i no ho descarreguem
+            audio_url = info['url']
+        except Exception as e:
+            await ctx.send(f"```Error obtenint l'àudio: {e}```")
+            return 1
 
     if info.get('extractor') != 'youtube':
         await ctx.send(f"```No pots reproduir '{info['title']}'! Només es poden reproduir cançons de Youtube.```")
@@ -80,23 +84,20 @@ async def play_music(ctx, url):
 # Comanda perque el bot entri al canal de veu de l'autor del missatge (pot passar que s'hagi quedat en un altre canal de veu reproduint una musica i tu el vulguis en l'actual)
 @bot.command()
 async def join(ctx):
-
+    
     if ctx.author.voice:
         voice_client = discord.utils.get(bot.voice_clients, guild=ctx.guild)
         channel = ctx.author.voice.channel
         
-        if voice_client: # Si està connectat ...
-            if voice_client.channel != channel: # Si està al mateix canal que l'autor del missatge ...
-                if voice_client.is_playing(): # Si esta cantant alguna canço ...
-                    get_queue(ctx.guild.id).clear()
-                    await ctx.send("```Movent bot i eliminant cua...```")
-                await voice_client.disconnect()
-                await channel.connect()
-            else:
-                await ctx.send("```Ja estic al canal " + str(voice_client.channel) + ".```")
-        else:
+        if not voice_client:
             await channel.connect()
-        
+            return 0
+
+        if voice_client.channel == channel: # Si el canal es el mateix
+            await ctx.send("```Ja estic al canal " + str(voice_client.channel) + ".```")
+            return
+        await voice_client.move_to(channel, timeout=4.0)
+
     else:
         await ctx.send("```Has d'estar en un canal de veu```")
 
@@ -122,8 +123,12 @@ async def stop(ctx):
     voice_client = discord.utils.get(bot.voice_clients, guild=ctx.guild)
     if voice_client:
         get_queue(ctx.guild.id).clear()
-        await voice_client.disconnect()
-        await ctx.send("```Sortint del canal de veu " + str(voice_client.channel) + "```")
+        try:
+            await ctx.send("```Sortint del canal de veu " + str(voice_client.channel) + "```")
+            await voice_client.disconnect()
+        except Exception as e:
+            await ctx.send(f"```Error durant la desconnexió: {e}```")
+            return 1
     else:
         await ctx.send("```No estic a cap canal de veu```")
 
