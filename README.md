@@ -17,7 +17,7 @@ To extract the cookies, you need to be logged in with a gmail account and access
 
 You can test if the cookie file is correct using this command with a valid YouTube link:
 ```
- yt-dlp --cookies path_to_cookies_file.txt "link_to_youtube_video"
+yt-dlp --cookies path_to_cookies_file.txt "link_to_youtube_video"
 ```
 
 ---
@@ -40,4 +40,34 @@ pip install -r requirements.txt
 You can run the application with:
 ```
 python3 tot.py
+```
+
+---
+
+### Run the Application as a Service
+
+You can create a service file in **/etc/systemd/system/bot.service**. Then you can configure the service with the following example:
+```
+[Unit]
+Description=Discord Bot
+After=multi-user.target network-online.target
+
+[Service]
+WorkingDirectory=/home/arnau/Desktop/discord-music-bot
+ExecStart=/home/arnau/Desktop/discord-music-bot/venv/bin/python /home/arnau/Desktop/discord-music-bot/tot.py
+Type=idle
+Restart=on-failure
+TimeoutStartSec=8
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+```
+Then you'll have to run these commands:
+```
+sudo systemctl daemon-reload
+systemctl start bot
+sudo systemctl restart bot
+sudo systemctl status bot.service
+sudo journalctl -u bot.service -f  #Check the live outputs 
 ```
