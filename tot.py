@@ -40,7 +40,9 @@ async def play_next(ctx):
         url = queue.pop(0)
         await play_music(ctx, url)
     else:
-        await stop(ctx)
+        voice_client = discord.utils.get(bot.voice_clients, guild=ctx.guild)
+        if voice_client and voice_client.is_connected():
+            await stop(ctx)
 
 
 
@@ -121,7 +123,7 @@ async def play(ctx, url: str):
 async def stop(ctx):
     
     voice_client = discord.utils.get(bot.voice_clients, guild=ctx.guild)
-    if voice_client:
+    if voice_client and voice_client.is_connected():
         get_queue(ctx.guild.id).clear()
         try:
             await ctx.send("```Sortint del canal de veu " + str(voice_client.channel) + "```")
